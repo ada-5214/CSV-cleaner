@@ -7,13 +7,13 @@ parser.add_argument("--fix_column_names",action="store_true",help="Match column 
 parser.add_argument("--duplicate_rows",action="store_true",help="Remove duplicate rows in selected or in all columns")
 parser.add_argument("--select_columns",nargs="+",default="all",action="store",help="Select specific columns to clean, default = all (insert names of columns)")
 parser.add_argument("--remove_rows",action="store_true",help="Remove rows that have missing values")
-parser.add_argument("--fix_data_types",action="store_true",help="Change values to correct data types")
-parser.add_argument("--types",action="store",help="Expected data types for each column")
+#parser.add_argument("--fix_data_types",action="store_true",help="Change values to correct data types")
+#parser.add_argument("--types",action="store",help="Expected data types for each column")
 parser.add_argument("-i","--input_file",action="store",help="Input file")
 parser.add_argument("-o","--output_file",action="store_true",help="Output file")
 parser.add_argument("-t","--trim_whitespace",action="store_true",help="Remove leading and trailing whitespace from all strings")
 parser.add_argument("--space_replace",default="_",action="store",help="What to replace spaces with in column names (default = _)")
-parser.add_argument("--remove_bad_rows",action="store_true",help="Remove rows containing incorrect value types that can't be converted")
+#parser.add_argument("--remove_bad_rows",action="store_true",help="Remove rows containing incorrect value types that can't be converted")
 
 args=parser.parse_args()
 
@@ -35,12 +35,6 @@ def file_output(file):
     file.to_csv(new_file_name,index=False)
     return new_file_name
 
-"""def type_convert(file):
-    counter=0
-    for column in file.columns:
-        
-
-        counter+=1"""
 def whitespace_remover(file_whitespace):
     for x in file_whitespace.columns:
         if file_whitespace[x].dtype=="object":
@@ -52,7 +46,9 @@ def whitespace_remover(file_whitespace):
             pass
     return file_whitespace
 
-#def remove_duplicate_rows(file_duplicates):
+def remove_duplicate_rows(file_duplicates):
+    file_duplicates=file_duplicates.drop_duplicates(subset=columns_selected)
+    return file_duplicates
 
 def column_name_fix(file_name_fix):
     columns_list=list(file_name_fix.columns)
@@ -85,6 +81,8 @@ if args.fix_column_names:
     file_new=column_name_fix(file_new)
 if args.remove_rows:
     file_new=rows_remove(file_new)
+if args.duplicate_rows:
+    file_new=remove_duplicate_rows(file_new)
 if args.output_file:
     print(file_output(file_new))
     print(file_new)
