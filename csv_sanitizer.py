@@ -1,6 +1,7 @@
 import csv
 import argparse
 import pandas as pd
+
 parser=argparse.ArgumentParser(description="Cleans CSV files")
 parser.add_argument("-c","--column_names",nargs="+",action="store",help="All expected names for columns")
 parser.add_argument("--fix_column_names",action="store_true",help="Match column names to expected column names (fixes casing and spacing issues)")
@@ -17,6 +18,7 @@ parser.add_argument("--space_replace",default="_",action="store",help="What to r
 
 args=parser.parse_args()
 
+#checks if specific columns were selected and returns a list of either all or specific column names
 def select_columns(file):
     if args.select_columns=="all":
         return list(file.columns)
@@ -25,16 +27,18 @@ def select_columns(file):
 
 """def column_types():
     return list(args.types)"""
-
+#reads the file inputted
 def file_input(file):
     return pd.read_csv(file)
 
+#resets the index of the file and then creates a new file called "cleaned[filename].csv"
 def file_output(file):
     file.reset_index(drop=True)
     new_file_name="cleaned_"+file_name
     file.to_csv(new_file_name,index=False)
     return new_file_name
 
+#gets rid of whitespace in column names
 def whitespace_remover(file_whitespace):
     for x in file_whitespace.columns:
         if file_whitespace[x].dtype=="object":
@@ -46,10 +50,13 @@ def whitespace_remover(file_whitespace):
             pass
     return file_whitespace
 
+#gets rid of duplicate rows only including the columns selected
 def remove_duplicate_rows(file_duplicates):
     file_duplicates=file_duplicates.drop_duplicates(subset=columns_selected)
     return file_duplicates
 
+#checks if the column names inputted and the column names in the file are the same by comparing them both in lowercase and changes the name in the file to the name inputted if they dont match
+#it also checks for spaces and replaces them with either an underscore or a specific character if inputted
 def column_name_fix(file_name_fix):
     columns_list=list(file_name_fix.columns)
     names_list=list(args.column_names)
@@ -61,20 +68,25 @@ def column_name_fix(file_name_fix):
     file_name_fix.columns=columns_list
     return file_name_fix
 
+#removes any rows containing N/A values, only for specific columns if specified
 def rows_remove(file_rows_remove):
     file_rows_remove=file_rows_remove.dropna(subset=columns_selected)
     return file_rows_remove
 
+#removes rows that have all N/A values
 def empty_remove(file_empty_rows):
     file_empty_rows=file_empty_rows.dropna(how="all")
     return file_empty_rows
 
-if len(args.input_file)>0:
-    file_name=args.input_file
-    file_new=file_input(args.input_file)
+
+file_name=args.input_file
+#automatically gets file inputted and removes empty rows, checks which colummns to apply other arguments to
+file_new=file_input(args.input_file)
 file_new=empty_remove(file_new)
 columns_selected=select_columns(file_new)
 #types_columns=column_types()
+
+#checks which arguments are True and updates new file by calling the relevant function
 if args.trim_whitespace:
     file_new=whitespace_remover(file_new)
 if args.fix_column_names:
